@@ -1,8 +1,13 @@
 package com.example.awsaccess.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "followup_questions")
 public class FollowupQuestion {
@@ -21,7 +26,7 @@ public class FollowupQuestion {
     private String answer;
 
     @Column(nullable = false)
-    private String status; // ASKED / ANSWERED
+    private String status;
 
     private LocalDateTime createdAt;
     private LocalDateTime answeredAt;
@@ -31,7 +36,4 @@ public class FollowupQuestion {
         this.createdAt = LocalDateTime.now();
         this.status = "ASKED";
     }
-
-    // getters and setters (later)
 }
-

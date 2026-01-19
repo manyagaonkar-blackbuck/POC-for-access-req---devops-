@@ -1,8 +1,13 @@
 package com.example.awsaccess.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "access_requests")
 public class AccessRequest {
@@ -18,10 +23,10 @@ public class AccessRequest {
     private String reason;
 
     @Column(columnDefinition = "TEXT")
-    private String services; // JSON as String (POC)
+    private String services;
 
     @Column(columnDefinition = "TEXT")
-    private String resourceArns; // JSON as String (POC)
+    private String resourceArns;
 
     @Column(nullable = false)
     private String status;
@@ -33,7 +38,4 @@ public class AccessRequest {
         this.createdAt = LocalDateTime.now();
         this.status = "DRAFT";
     }
-
-    // getters and setters (we’ll add later)
 }
-
