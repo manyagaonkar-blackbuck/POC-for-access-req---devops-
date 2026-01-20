@@ -1,13 +1,7 @@
 package com.example.awsaccess.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
-import java.time.LocalDateTime;
-
-@Getter
-@Setter
 @Entity
 @Table(name = "approvals")
 public class Approval {
@@ -16,22 +10,40 @@ public class Approval {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "access_request_id", nullable = false)
     private Long accessRequestId;
 
-    @Column(nullable = false)
-    private String approverRole; // MANAGER or DEVOPS
+    @Column(name = "approver_role", nullable = false)
+    private String approverRole;
 
     @Column(nullable = false)
-    private String decision; // APPROVED or REJECTED
+    private String status;
 
-    @Column(columnDefinition = "TEXT")
-    private String reason;
+    public Long getId() {
+        return id;
+    }
 
-    private LocalDateTime decidedAt;
+    public Long getAccessRequestId() {
+        return accessRequestId;
+    }
 
-    @PrePersist
-    public void onCreate() {
-        this.decidedAt = LocalDateTime.now();
+    public void setAccessRequestId(Long accessRequestId) {
+        this.accessRequestId = accessRequestId;
+    }
+
+    public String getApproverRole() {
+        return approverRole;
+    }
+
+    public void setApproverRole(String approverRole) {
+        this.approverRole = approverRole;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

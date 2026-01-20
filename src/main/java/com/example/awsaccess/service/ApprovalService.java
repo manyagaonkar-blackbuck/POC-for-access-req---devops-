@@ -1,8 +1,6 @@
 package com.example.awsaccess.service;
 
-import com.example.awsaccess.model.AccessRequest;
 import com.example.awsaccess.model.Approval;
-import com.example.awsaccess.repository.AccessRequestRepository;
 import com.example.awsaccess.repository.ApprovalRepository;
 import org.springframework.stereotype.Service;
 
@@ -10,60 +8,47 @@ import org.springframework.stereotype.Service;
 public class ApprovalService {
 
     private final ApprovalRepository approvalRepository;
-    private final AccessRequestRepository accessRequestRepository;
 
-    public ApprovalService(ApprovalRepository approvalRepository,
-                           AccessRequestRepository accessRequestRepository) {
+    public ApprovalService(ApprovalRepository approvalRepository) {
         this.approvalRepository = approvalRepository;
-        this.accessRequestRepository = accessRequestRepository;
     }
 
-    public void managerApprove(Long requestId, String decision, String reason) {
+    public void createInitialApprovals(Long requestId) {
 
-        AccessRequest request = accessRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+        Approval manager = new Approval();
+        manager.setAccessRequestId(requestId);
+        manager.setApproverRole("MANAGER");
+        manager.setStatus("PENDING");
+        approvalRepository.save(manager);
 
-        if (!"CREATED".equals(request.getStatus())) {
-            throw new RuntimeException("Request not in CREATED state");
-        }
-
-        saveApproval(requestId, "MANAGER", decision, reason);
-
-        if ("APPROVED".equals(decision)) {
-            request.setStatus("MANAGER_APPROVED");
-        } else {
-            request.setStatus("REJECTED");
-        }
-
-        accessRequestRepository.save(request);
+        Approval devops = new Approval();
+        devops.setAccessRequestId(requestId);
+        devops.setApproverRole("DEVOPS");
+        devops.setStatus("PENDING");
+        approvalRepository.save(devops);
     }
 
-    public void devopsApprove(Long requestId, String decision, String reason) {
+    public void managerApprove(Long requestId, String approver, String comment) {
+        Approval approval = approvalRepository
+                .findByAccessRequestId(requestId)
+                .stream()
+                .filter(a -> a.getApproverRole().equals("MANAGER"))
+                .findFirst()
+                .orElseThrow();
 
-        AccessRequest request = accessRequestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
-
-        if (!"MANAGER_APPROVED".equals(request.getStatus())) {
-            throw new RuntimeException("Request not in MANAGER_APPROVED state");
-        }
-
-        saveApproval(requestId, "DEVOPS", decision, reason);
-
-        if ("APPROVED".equals(decision)) {
-            request.setStatus("DEVOPS_APPROVED");
-        } else {
-            request.setStatus("REJECTED");
-        }
-
-        accessRequestRepository.save(request);
+        approval.setStatus("APPROVED");
+        approvalRepository.save(approval);
     }
 
-    private void saveApproval(Long requestId, String role, String decision, String reason) {
-        Approval approval = new Approval();
-        approval.setAccessRequestId(requestId);
-        approval.setApproverRole(role);
-        approval.setDecision(decision);
-        approval.setReason(reason);
+    public void devopsApprove(Long requestId, String approver, String comment) {
+        Approval approval = approvalRepository
+                .findByAccessRequestId(requestId)
+                .stream()
+                .filter(a -> a.getApproverRole().equals("DEVOPS"))
+                .findFirst()
+                .orElseThrow();
+
+        approval.setStatus("APPROVED");
         approvalRepository.save(approval);
     }
 }
