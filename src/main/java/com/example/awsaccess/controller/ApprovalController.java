@@ -1,7 +1,10 @@
 package com.example.awsaccess.controller;
 
 import com.example.awsaccess.dto.request.ApprovalDecisionDto;
+import com.example.awsaccess.model.AccessRequest;
+import com.example.awsaccess.repository.AccessRequestRepository;
 import com.example.awsaccess.service.ApprovalService;
+import com.example.awsaccess.service.PolicyGenerationService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -9,12 +12,20 @@ import org.springframework.web.bind.annotation.*;
 public class ApprovalController {
 
     private final ApprovalService approvalService;
+    private final PolicyGenerationService policyGenerationService;
+    private final AccessRequestRepository accessRequestRepository;
 
-    public ApprovalController(ApprovalService approvalService) {
+    public ApprovalController(
+            ApprovalService approvalService,
+            PolicyGenerationService policyGenerationService,
+            AccessRequestRepository accessRequestRepository
+    ) {
         this.approvalService = approvalService;
+        this.policyGenerationService = policyGenerationService;
+        this.accessRequestRepository = accessRequestRepository;
     }
 
-    // Manager Approval
+    // MANAGER APPROVAL
     @PostMapping("/{requestId}/manager-approval")
     public String managerApproval(
             @PathVariable Long requestId,
@@ -28,7 +39,7 @@ public class ApprovalController {
         return "Manager decision recorded";
     }
 
-    // DevOps Approval
+    // DEVOPS APPROVAL + POLICY GENERATION
     @PostMapping("/{requestId}/devops-approval")
     public String devopsApproval(
             @PathVariable Long requestId,
@@ -39,6 +50,32 @@ public class ApprovalController {
                 dto.getDecision(),
                 dto.getReason()
         );
-        return "DevOps decision recorded";
+
+        AccessRequest request = accessRequestRepository
+                .findById(requestId)
+                .orElseThrow();
+
+        String policy = policyGenerationService.generateIamPolicy(request);
+        String cli = policyGenerationService.generateAwsCliCommand(requestId);
+
+        return policy + "\n\n" + cli;
+    }
+
+    // FINAL STEP — MARK ACCESS GRANTED
+    @PostMapping("/{requestId}/mark-granted")
+    public String markGranted(@PathVariable Long requestId) {
+
+        AccessRequest request = accessRequestRepository
+                .findById(requestId)
+                .orElseThrow();
+
+        if (!"DEVOPS_APPROVED".equals(request.getStatus())) {
+            throw new RuntimeException("Request not approved by DevOps");
+        }
+
+        request.setStatus("ACCESS_GRANTED");
+        accessRequestRepository.save(request);
+
+        return "Access marked as granted";
     }
 }
