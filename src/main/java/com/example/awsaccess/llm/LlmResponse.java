@@ -8,9 +8,11 @@ public class LlmResponse {
     private boolean needFollowup;
     private String followupQuestion;
 
+    // 🔥 REQUIRED BY CONTROLLERS
     private List<String> services;
     private List<String> actionGroups;
 
+    // Optional but useful
     private Map<String, Object> resolvedResources;
 
     public boolean isNeedFollowup() {
@@ -53,5 +55,3 @@ public class LlmResponse {
         this.resolvedResources = resolvedResources;
     }
 }
-
-

@@ -3,6 +3,7 @@ package com.example.awsaccess.service;
 import com.example.awsaccess.model.Approval;
 import com.example.awsaccess.repository.ApprovalRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class ApprovalService {
@@ -14,41 +15,38 @@ public class ApprovalService {
     }
 
     public void createInitialApprovals(Long requestId) {
+        Approval m = new Approval();
+        m.setAccessRequestId(requestId);
+        m.setApproverRole("MANAGER");
+        m.setStatus("PENDING");
+        approvalRepository.save(m);
 
-        Approval manager = new Approval();
-        manager.setAccessRequestId(requestId);
-        manager.setApproverRole("MANAGER");
-        manager.setStatus("PENDING");
-        approvalRepository.save(manager);
-
-        Approval devops = new Approval();
-        devops.setAccessRequestId(requestId);
-        devops.setApproverRole("DEVOPS");
-        devops.setStatus("PENDING");
-        approvalRepository.save(devops);
+        Approval d = new Approval();
+        d.setAccessRequestId(requestId);
+        d.setApproverRole("DEVOPS");
+        d.setStatus("PENDING");
+        approvalRepository.save(d);
     }
 
     public void managerApprove(Long requestId, String approver, String comment) {
-        Approval approval = approvalRepository
-                .findByAccessRequestId(requestId)
-                .stream()
-                .filter(a -> a.getApproverRole().equals("MANAGER"))
-                .findFirst()
-                .orElseThrow();
-
-        approval.setStatus("APPROVED");
-        approvalRepository.save(approval);
+        List<Approval> list = approvalRepository.findByAccessRequestId(requestId);
+        for (Approval a : list) {
+            if ("MANAGER".equals(a.getApproverRole())) {
+                a.setStatus("APPROVED");
+                approvalRepository.save(a);
+                break;
+            }
+        }
     }
 
     public void devopsApprove(Long requestId, String approver, String comment) {
-        Approval approval = approvalRepository
-                .findByAccessRequestId(requestId)
-                .stream()
-                .filter(a -> a.getApproverRole().equals("DEVOPS"))
-                .findFirst()
-                .orElseThrow();
-
-        approval.setStatus("APPROVED");
-        approvalRepository.save(approval);
+        List<Approval> list = approvalRepository.findByAccessRequestId(requestId);
+        for (Approval a : list) {
+            if ("DEVOPS".equals(a.getApproverRole())) {
+                a.setStatus("APPROVED");
+                approvalRepository.save(a);
+                break;
+            }
+        }
     }
 }
